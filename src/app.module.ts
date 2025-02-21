@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { RelayModule } from './modules/relay/relay.module';
+import { InternalModule } from './modules/internal/internal.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { RelayModule } from './modules/relay/relay.module';
     }),
     WebhookModule,
     RelayModule,
+    InternalModule,
   ],
   controllers: [AppController],
   providers: [AppService],
