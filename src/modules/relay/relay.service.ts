@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { InjectQueue, Process, Processor } from '@nestjs/bull';
-import { Job, Queue } from 'bull';
+import {
+  BullQueueEvents,
+  OnQueueActive,
+  OnQueueError,
+  OnQueueEvent,
+  OnQueueFailed,
+  Process,
+  Processor,
+} from '@nestjs/bull';
+import { Job } from 'bull';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
@@ -8,41 +16,53 @@ import axios from 'axios';
 @Processor('webhook-queue')
 export class RelayService {
   private internalServiceUrl: string;
-  private retryDelay: number;
-  private maxRetries: number;
 
-  constructor(
-    @InjectQueue('webhook-queue') private webhookQueue: Queue,
-    private configService: ConfigService,
-  ) {
+  constructor(private configService: ConfigService) {
     this.internalServiceUrl = this.configService.get<string>(
       'INTERNAL_SERVICE_URL',
-      'http://localhost:4000',
+      'http://localhost:3000',
     );
-    this.retryDelay = this.configService.get<number>('RETRY_DELAY', 5000);
-    this.maxRetries = this.configService.get<number>('MAX_RETRIES', 3);
+  }
+
+  @OnQueueActive()
+  onActive(job: Job) {
+    console.log(
+      `RELAY SERVICE: Processing job ${job.id} of type ${job.name} with data ${job.data}...`,
+    );
   }
 
   @Process('process-webhook')
   async handleWebhook(job: Job) {
-    const webhookData = job.data;
-    console.log(`Processing webhook:`, webhookData);
+    const webhookData = job?.data;
 
-    try {
-      const response = await axios.post(this.internalServiceUrl, webhookData);
-      console.log('Webhook successfully relayed:', response.status);
-      await job.moveToCompleted('Job completed successfully', true);
-    } catch (error) {
-      console.error('Error forwarding webhook:', error.message);
+    const response = await axios.post(this.internalServiceUrl, webhookData, {
+      validateStatus: (status) => status < 500,
+    });
 
-      if (job.attemptsMade < this.maxRetries) {
-        console.log(`Retrying in ${this.retryDelay} ms`);
-        await new Promise((resolve) => setTimeout(resolve, this.retryDelay));
-        await job.retry();
-      } else {
-        console.log('Max retries reached, moving job to failed.');
-        await job.moveToFailed({ message: error.message }, true);
-      }
+    console.log(
+      'RELAY SERVICE: Webhook successfully relayed:',
+      response?.status,
+    );
+  }
+
+  @OnQueueEvent(BullQueueEvents.COMPLETED)
+  onCompleted(job: Job) {
+    console.log(
+      `RELAY SERVICE: Completed job ${job.id} of type ${job.name} with result ${job.returnvalue}`,
+    );
+  }
+
+  @OnQueueFailed()
+  onFailed(job: Job) {
+    console.log(`RELAY SERVICE: Failed job ${job.id} of type ${job.name}`);
+  }
+
+  @OnQueueError()
+  onError(job: Job | string) {
+    if (typeof job === 'string') {
+      console.log(`RELAY SERVICE: Error in running job: ${job}`);
+    } else {
+      console.log(`RELAY SERVICE: Error job ${job.id} of type ${job.name}`);
     }
   }
 }

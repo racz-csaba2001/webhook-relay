@@ -7,7 +7,7 @@ export class WebhookController {
 
   @Post()
   async receiveWebhook(@Body() payload: any) {
-    console.log('Webhook received:', payload);
+    console.log('RELAY SERVICE: Webhook received:', payload);
     await this.webhookService.enqueueWebhook(payload);
     return { status: 'Webhook received' };
   }

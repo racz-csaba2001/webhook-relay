@@ -185,6 +185,13 @@ docker logs webhook-relay-api-1
 
 ---
 
+### **Check Job Status in browser**
+
+ - Alternatively you can check the status and messages of all jobs at ```http://localhost:3000/bull-board/``` inside the ```webhook-queue```
+ - This method uses the [bull-board](https://github.com/felixmosh/bull-board) addon
+
+---
+
 ## 🔥 **Load Testing with Vegeta**
 
 ### **1️⃣ Install Vegeta (if not installed)**

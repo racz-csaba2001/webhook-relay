@@ -18,6 +18,11 @@ import { InternalController } from './modules/internal/internal.controller';
         host: process.env.REDIS_HOST || 'localhost',
         port: Number(process.env.REDIS_PORT) || 6379,
       },
+      defaultJobOptions: {
+        attempts: Number(process.env.MAX_RETRIES) || 3,
+        backoff: Number(process.env.RETRY_DELAY) || 5000,
+        delay: 0,
+      },
     }),
     WebhookModule,
     RelayModule,

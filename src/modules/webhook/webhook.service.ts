@@ -4,10 +4,10 @@ import { Queue } from 'bull';
 
 @Injectable()
 export class WebhookService {
-    constructor(@InjectQueue('webhook-queue') private webhookQueue: Queue) {}
+  constructor(@InjectQueue('webhook-queue') private webhookQueue: Queue) {}
 
-    async enqueueWebhook(payload: any) {
-        await this.webhookQueue.add('process-webhook', payload);
-        console.log('Webhook enqueued:', payload);
-    }
+  async enqueueWebhook(payload: any) {
+    await this.webhookQueue.add('process-webhook', payload);
+    console.log('RELAY SERVICE: Webhook enqueued:', payload);
+  }
 }
