@@ -31,6 +31,7 @@ export class RelayService {
     try {
       const response = await axios.post(this.internalServiceUrl, webhookData);
       console.log('Webhook successfully relayed:', response.status);
+      await job.moveToCompleted('Job completed successfully', true);
     } catch (error) {
       console.error('Error forwarding webhook:', error.message);
 
@@ -39,7 +40,8 @@ export class RelayService {
         await new Promise((resolve) => setTimeout(resolve, this.retryDelay));
         await job.retry();
       } else {
-        console.log('Max retries reached, dropping webhook.');
+        console.log('Max retries reached, moving job to failed.');
+        await job.moveToFailed({ message: error.message }, true);
       }
     }
   }

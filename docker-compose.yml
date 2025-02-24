@@ -6,7 +6,6 @@ services:
       - "3000:3000"
     depends_on:
       - redis
-      - internal
     env_file:
       - .env
 
@@ -14,9 +13,3 @@ services:
     image: "redis:alpine"
     ports:
       - "6379:6379"
-
-  internal:
-    build: .
-    command: npm run start:internal
-    ports:
-      - "4000:4000"
